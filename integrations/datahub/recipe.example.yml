@@ -1,0 +1,52 @@
+pipeline_name: civicloop-postgres-metadata
+source:
+  type: postgres
+  config:
+    host_port: ${CIVICLOOP_PG_HOST_PORT}
+    database: ${CIVICLOOP_PG_DATABASE}
+    username: ${CIVICLOOP_PG_USER}
+    password: ${CIVICLOOP_PG_PASSWORD}
+    env: ${DATAHUB_ENV}
+    platform_instance: civicloop
+    schema_pattern:
+      allow: ['^public$']
+      ignoreCase: false
+    table_pattern:
+      allow: ['^[^.]+\.public\.(Complaint|ComplaintEvent|ComplaintUpdate|ComplaintSignal|Nudge|Media|Validation|Ward|Department|SLA|PerformanceSnapshot)$']
+      deny: ['.*\.(User|Officer|OtpCode|VerificationToken|_prisma_migrations)$']
+      ignoreCase: false
+    include_tables: true
+    include_views: false
+    include_stored_procedures: false
+    include_view_lineage: false
+    include_view_column_lineage: false
+    include_table_location_lineage: false
+    include_query_lineage: false
+    include_usage_statistics: false
+    include_top_n_queries: false
+    include_operational_stats: false
+    include_read_operational_stats: false
+    profiling:
+      enabled: false
+    classification:
+      enabled: false
+    stateful_ingestion:
+      enabled: false
+    options:
+      connect_args:
+        sslmode: ${CIVICLOOP_PG_SSLMODE}
+        connect_timeout: 10
+        options: '-c default_transaction_read_only=on -c statement_timeout=15000'
+transformers:
+  - type: civicloop_metadata.SafeSchema
+  - type: civicloop_metadata.DocumentedProperties
+  - type: civicloop_metadata.VerifiedLineage
+  - type: simple_add_dataset_tags
+    config:
+      tag_urns: ['urn:li:tag:CivicLoop']
+sink:
+  type: datahub-rest
+  config:
+    server: ${DATAHUB_GMS_URL}
+    token: ${DATAHUB_GMS_TOKEN}
+    timeout_sec: 30
