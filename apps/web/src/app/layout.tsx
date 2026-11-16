@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import UserProfile from "@/components/common/UserProfile";
+import CivicGuide from "@/components/chatbot/CivicGuide";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({
       >
         <UserProfile />
         {children}
+        <CivicGuide />
       </body>
     </html>
   );

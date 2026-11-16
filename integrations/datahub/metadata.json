@@ -1,0 +1,59 @@
+{
+  "source_revision": "f544aa2e2cde8ab569afc5323caeb8fb0997ab25",
+  "tables": {
+    "Complaint": {
+      "description": "CivicLoop civic issue lifecycle records, linked to a ward and department. Only the schema is cataloged; titles, descriptions, locations and other row values are never ingested.",
+      "evidence": ["apps/api/prisma/schema.prisma: Complaint", "apps/api/src/complaints/complaints.service.ts: create, advanceStatus, resolveWithProof"],
+      "columns": {
+        "currentStatus": "Current complaint lifecycle status (Prisma Status enum).",
+        "resolvedAt": "Nullable resolution timestamp. The current resolveWithProof implementation does not populate this column; do not assume completeness.",
+        "wardId": "Foreign key to Ward.id; a structural relationship, not transformation lineage.",
+        "departmentId": "Foreign key to Department.id.",
+        "duplicateOfId": "Optional link to the canonical complaint."
+      }
+    },
+    "ComplaintEvent": {
+      "description": "Complaint status history and audit events, including assignments, resolution and SLA escalation. Events have prevHash/hash links. Event payloads are not ingested.",
+      "evidence": ["apps/api/prisma/schema.prisma: ComplaintEvent", "apps/api/src/complaints/event-append.ts: appendEvent", "apps/api/src/sla/sla.service.ts: handleAckDue, handleResolveDue"],
+      "columns": {"type": "EventType describing the lifecycle or escalation event.", "data": "JSON event payload; values are excluded from metadata ingestion."}
+    },
+    "ComplaintUpdate": {
+      "description": "Community updates attached to complaints. Text and media URL values are not ingested. Tag and pin fields exist in the schema; the current addComplaintUpdate path does not set them.",
+      "evidence": ["apps/api/prisma/schema.prisma: ComplaintUpdate", "apps/api/src/complaints/complaints.service.ts: addComplaintUpdate"]
+    },
+    "ComplaintSignal": {
+      "description": "Community reaction types and severity for complaints, unique per complaint/user/type. Only schema metadata is ingested.",
+      "evidence": ["apps/api/prisma/schema.prisma: ComplaintSignal", "apps/api/src/complaints/complaints.service.ts: toggleSignal"]
+    },
+    "Nudge": {
+      "description": "Urge-action records with a per-user, per-complaint cooldown enforced by nudgeComplaint. No user identifiers or timestamps from rows are ingested.",
+      "evidence": ["apps/api/prisma/schema.prisma: Nudge", "apps/api/src/complaints/complaints.service.ts: nudgeComplaint"]
+    },
+    "Media": {
+      "description": "References to complaint and resolution media. Only column definitions are cataloged; files, URLs, coordinates and hashes from rows are excluded.",
+      "evidence": ["apps/api/prisma/schema.prisma: Media", "apps/api/src/complaints/complaints.service.ts: create, resolveWithProof"]
+    },
+    "Validation": {
+      "description": "Community resolution votes with local-presence weighting. The current service can reopen complaints after a weighted NOT_FIXED threshold; confirmed votes do not automatically mark them VERIFIED.",
+      "evidence": ["apps/api/prisma/schema.prisma: Validation", "apps/api/src/complaints/complaints.service.ts: validateComplaint"]
+    },
+    "Ward": {
+      "description": "City-code and ward definitions used to organize complaints and scope ward performance snapshots. Ward names from rows are not ingested.",
+      "evidence": ["apps/api/prisma/schema.prisma: Ward", "apps/api/src/metrics/metrics.service.ts: snapshot"]
+    },
+    "Department": {
+      "description": "Department definitions related to complaints, officers and SLA policies. No department records are ingested.",
+      "evidence": ["apps/api/prisma/schema.prisma: Department", "apps/api/src/meta/meta.controller.ts: getDepartments"]
+    },
+    "SLA": {
+      "description": "Acknowledgement and resolution hour limits by complaint category and department, read when scheduling BullMQ deadline checks. Policy values are not ingested.",
+      "evidence": ["apps/api/prisma/schema.prisma: SLA", "apps/api/src/sla/sla.service.ts: scheduleForComplaint"]
+    },
+    "PerformanceSnapshot": {
+      "description": "Month-to-date ward performance aggregates written by MetricsService.snapshot. The schema supports multiple entity types, but the current job calculates wards only. Lineage is derived from the job's actual reads of Ward, Complaint and ComplaintEvent.",
+      "evidence": ["apps/api/prisma/schema.prisma: PerformanceSnapshot", "apps/api/src/metrics/metrics.service.ts: snapshot"],
+      "upstreams": ["Ward", "Complaint", "ComplaintEvent"],
+      "columns": {"periodMonth": "UTC first day of the month aggregated by the current snapshot job.", "slaBreachRate": "Percentage of included complaints with an ESCALATED event."}
+    }
+  }
+}

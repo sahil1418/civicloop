@@ -15,6 +15,7 @@ import { OfficerModule } from './officer/officer.module';
 import { Auth2Module } from './auth2/auth2.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MetricsModule } from './metrics/metrics.module';
+import { ChatbotModule } from './chatbot/chatbot.module';
 
 
 
@@ -30,6 +31,7 @@ import { MetricsModule } from './metrics/metrics.module';
     Auth2Module,
     MetaModule,
     MetricsModule,
+    ChatbotModule,
     OfficerModule,
     PrismaModule,
     QueuesModule,

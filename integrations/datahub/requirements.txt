@@ -1,0 +1,4 @@
+# CLI version required by DataHub OSS v1.8.0 release notes.
+acryl-datahub[postgres]==1.7.0.14
+python-dotenv==1.2.1
+PyYAML==6.0.3
